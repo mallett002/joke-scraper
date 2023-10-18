@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const excel = require('excel4node');
 
 const jokes = [];
 
@@ -33,12 +34,11 @@ const jokes = [];
         const zingText = await punchline.evaluate(el => el.textContent);
 
         jokes.push(`${question}:${zingText}`);
-        
+
         //   await element.click(); // Just an example.
         //   await element.dispose();
 
         const another = await page.waitForSelector('.another .another');
-        console.log({ another });
         await another.click();
         sleep(1000);
 
@@ -48,13 +48,36 @@ const jokes = [];
     // Close browser.
     await browser.close();
 
-    console.log(jokes);
+    writeToSpreadsheet();
 
-    // Write to xlsx: https://stackoverflow.com/questions/17450412/how-to-create-an-excel-file-with-nodejs
+    console.log('Finished Successfully!');
 })();
 
 
 function sleep(delay) {
     const start = new Date().getTime();
     while (new Date().getTime() < start + delay);
+}
+
+// Write to xlsx: https://www.npmjs.com/package/excel4node
+function writeToSpreadsheet() {
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Jokes');
+
+    // header:
+    worksheet.cell(1, 1).string('Setup');
+    worksheet.cell(1, 2).string('Punchline');
+
+    // content:
+    for (let i = 0; i < jokes.length; i++) {
+        const joke = jokes[i];
+        const index = joke.indexOf(':');
+        const setup = joke.slice(0, index);
+        const punchline = joke.slice(index + 1);
+    
+        worksheet.cell(i + 2, 1).string(setup);
+        worksheet.cell(i + 2, 2).string(punchline);
+    }
+
+    workbook.write('jokes.xlsx');
 }
