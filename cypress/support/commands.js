@@ -23,3 +23,13 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+Cypress.Commands.overwrite("log", function(log, ...args) {
+    if (Cypress.browser.isHeadless) {
+      return cy.task("log", args, { log: false }).then(() => {
+        return log(...args);
+      });
+    } else {
+      console.log(...args);
+      return log(...args);
+    }
+  });
